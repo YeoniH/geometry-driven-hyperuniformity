@@ -76,12 +76,11 @@ class ConvexGeometry(object):
         return Ixx, Iyy, Ixy
     
 class PeriodicVoro(object):
-    def __init__(self, dim, points, L, run, step):
+    def __init__(self, dim, points, L, step):
         self.dim = dim
         self.points = points
         self.num_points = len(points)
         self.L = L
-        self.run = run
         self.step = step
 
         self.box = freud.box.Box.square(L)
