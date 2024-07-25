@@ -75,7 +75,10 @@ class ConvexGeometry(object):
         Ixy = sxy / 24  # - A * Px * Py
         return Ixx, Iyy, Ixy
     
+
+
 class PeriodicVoro(object):
+
     def __init__(self, dim, points, L, step):
         self.dim = dim
         self.points = points
@@ -89,6 +92,8 @@ class PeriodicVoro(object):
         self.voro = voro
 
     def update_by_lloyd_algorithm(self, pbc=True):
+        """ For the given point pattern (__init__), compute the next pattern 
+            updated by the Lloyd's algorithm """
         L = self.L
         updated_points = np.zeros(self.points.shape)
         for i, polygon in enumerate(self.voro.polytopes):
@@ -105,48 +110,12 @@ class PeriodicVoro(object):
                     y -= L
             updated_points[i] = [x, y, 0.]
         return np.array(updated_points)
-
-class DynamicalAnalysis(object):
-    
-    def __init__(self, coord, name, step, data_path, save_path, boxsz=None):
-
-        self.coord = coord
-        self.numPoints = len(coord)
-        self.name = name
-        self.step = step
-        self.fullName = '{}-step-{}'.format(name, step)
-        self.dataPath = data_path
-        self.savePath = save_path
-        
-        fig = plt.figure(figsize=(5, 3))
-        self.ax = fig.add_subplot(111)
-        
-        if boxsz == None:
-            self.L_x = np.sqrt(self.numPoints)
-            self.L_y = np.sqrt(self.numPoints)
-        elif len(boxsz) == 1:
-            self.L_x = boxsz
-            self.L_y = boxsz
-        elif len(boxsz) == 2:
-            self.L_x = boxsz[0]
-            self.L_y = boxsz[1]
-        
-        self.box = freud.box.Box.from_box([self.L_x, self.L_y])
-        
-        self.points = np.c_[self.coord, [0] * self.numPoints]
-        self.voro = freud.locality.Voronoi()
-        self.voro.compute((self.box, self.points))
-        self.cluster = freud.cluster.Cluster()
-        self.cluster.compute((self.box, self.points), )
-
-        self.points_next = np.c_[coord_next, [0] * self.numPoints]
-        self.voro_next = freud.locality.Voronoi()
-        self.voro_next.compute((self.box, self.points_next))
     
     def msd(self):
         """ This function computes the meas-square displacement of a system """
         msd = freud.msd.MSD(box=self.box, mode="direct")
-        msd.compute(positions=(self.points, self.points_next))
+        updated_points_by_lloyd = self.update_by_lloyd_algorithm()
+        msd.compute(positions=(self.points, updated_points_by_lloyd))
         msd.plot(ax=self.ax)
 
     def quantizer_energy(self):
@@ -199,16 +168,9 @@ class DynamicalAnalysis(object):
 
     ###### CORRELATION FUNCTION
     
-    def compute_correlation_function(self, to_correlate="phase_angle", bins=25):
-        if to_correlate == "hex_order":
-            order_param = self.compute_hexatic_order_modulus()
-            # ylabel = r'$c_{|\psi_{6}|}(r)$'
-        elif to_correlate == "bond_order":
-            order_param = self.compute_hexatic_order()
-            # ylabel = r'$c_{\psi_{6}}(r)$'
-        elif to_correlate == "phase_angle":
-            order_param = self.compute_hexatic_order_phase_angle()
-            # ylabel = r'$c_{\theta}(r)$'
+    def compute_correlation_function(self, bins=25):
+        order_param = self.compute_hexatic_order_phase_angle()
+        # ylabel = r'$c_{\theta}(r)$'
 
         mean_order_param = np.mean(order_param)
         values = []  # phase angle fluctuations
@@ -221,8 +183,8 @@ class DynamicalAnalysis(object):
         autocorr = np.c_[cf.bin_centers, cf.correlation]  # np.c_[np.abs(cf.bin_centers), np.abs(cf.correlation)]
         return autocorr
 
-    def correlation_length(self, to_correlate="phase_angle", bins=25, norm=True, from_bin=1):
-        autocorr = self.compute_correlation_function(to_correlate=to_correlate, bins=bins)[from_bin:]
+    def correlation_length(self, bins=25, norm=True, from_bin=1):
+        autocorr = self.compute_correlation_function(bins=bins)[from_bin:]
         x_dist = autocorr.T[0]
         if norm:
             y_corr = autocorr.T[1]/autocorr.T[1][0]     # normalised!
@@ -269,7 +231,7 @@ class DynamicalAnalysis(object):
         return quadruples
 
     def t1_active_quadruples(self, quadruples, quadruples_next, empty_save=False):
-        print("Extracting T1-quadruples:", self.fullName)
+        print("Extracting T1-quadruples")
         start_time = time.time()
         Q_t1active = []
         edge_ratio_t1 = []
@@ -294,7 +256,7 @@ class DynamicalAnalysis(object):
                     # t1_quad = old_link + new_link
                     Q_t1active.append(old_link + new_link)
             else:
-                print(self.fullName, ', T1-active cells for non-quadruples:', quad)
+                print('T1-active cells for non-quadruples:', quad)
         flatten_t1Q = [elt for quad in Q_t1active for elt in quad]
         if empty_save:   # Save empty files
             np.savetxt('{0}/t1_transition/T1-quad/{1}/T1-quad_{2}_t{3}.txt'.format(self.savePath, self.name, self.name[3:], self.step),
@@ -402,7 +364,7 @@ class DynamicalAnalysis(object):
             if len(nlist_defects[defect]) == 1:
                 endpoints.append(defect)
                 
-        print('Extracting defect skeletons with topo charge for ', self.fullName)
+        print('Extracting defect skeletons with topological charge')
         already_grouped = []
         another_end = []
         clusters = []
@@ -449,7 +411,7 @@ class DynamicalAnalysis(object):
         chain_size = []
         for labeled_chain in clusters:
             chain_size.append(len(labeled_chain))
-        print('Max chain size of {}: {}'.format(self.fullName, np.max(chain_size)))
+        print('Max chain size: {}'.format(np.max(chain_size)))
 
         f_skeletons = open('{0}/defects/{1}/skeletons/skeletons_{2}.txt'.format(self.savePath, self.name, self.fullName), 'w')
         f_charge = open('{0}/defects/{1}/charge/charge_{2}.txt'.format(self.savePath, self.name, self.fullName), 'w')
@@ -533,10 +495,10 @@ class DynamicalAnalysis(object):
             skins.append(skins)
         # print(skins)
         f_skins.close()
-        print('Done with extracting defect skins in {} !'.format(self.fullName))
+        print('Done with extracting defect skins!')
 
     def extract_independent_defect_bodies(self):
-        print('Extracting defect bodies of ', self.fullName)
+        print('Extracting defect bodies')
         f_skeleton = open('{0}/defects/{1}/skeletons/skeletons_{2}.txt'.format(self.savePath, self.name, self.fullName), 'r')
         f_skin = open('{0}/defects/{1}/bodies/skins_{2}.txt'.format(self.savePath, self.name, self.fullName), 'r')
 
@@ -608,7 +570,7 @@ class DynamicalAnalysis(object):
 
 class StructureAnalysis(object):
 
-    def __init__(self, coord, L_x, L_y, min_k, max_k, num_kbins, ppName, name, save_path):
+    def __init__(self, coord, L_x, L_y, min_k, max_k, num_kbins, name):
         self.coord = coord
         self.numPoints = coord.shape[0]
         self.L_x = L_x
@@ -617,8 +579,6 @@ class StructureAnalysis(object):
         self.max_k = max_k
         self.num_kbins = num_kbins
         self.fullName = name
-        self.resultPath = save_path
-        self.P_name = ppName
 
     def compute_structure_factor_for_2d_data(self, file_name, boxsz=None, save=True):
         """ This function is defined by Michael A. Klatt (https://mklatt.org/) """
@@ -672,14 +632,14 @@ class StructureAnalysis(object):
 
         # print('Determining structure factor ...')
         S = np.zeros((count), dtype=complex)  # structure factor
-        # if self.tqdm_available:
-        # for sj in tqdm(range(num_points)):
-        #     S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
-        # else:
-        for sj in range(num_points):
-            S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
-            if sj % 1000 == 0:
-                print('Computing SF for {} : Point {}'.format(self.fullName, sj))
+        if self.tqdm_available:
+            for sj in tqdm(range(num_points)):
+                S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
+        else:
+            for sj in range(num_points):
+                S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
+                if sj % 1000 == 0:
+                    print('Computing SF : Point {}'.format(sj))
 
         # The final (unbinned) structure factor for each absolute value of k
         unbinned = np.zeros((count, 4))
