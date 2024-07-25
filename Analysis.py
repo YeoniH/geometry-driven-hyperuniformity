@@ -74,6 +74,38 @@ class ConvexGeometry(object):
         Iyy = syy / 12  # - A * Px ** 2
         Ixy = sxy / 24  # - A * Px * Py
         return Ixx, Iyy, Ixy
+    
+class PeriodicVoro(object):
+    def __init__(self, dim, points, L, run, step):
+        self.dim = dim
+        self.points = points
+        self.num_points = len(points)
+        self.L = L
+        self.run = run
+        self.step = step
+
+        self.box = freud.box.Box.square(L)
+        voro = freud.locality.Voronoi()
+        voro.compute((self.box, points))
+        self.voro = voro
+
+    def update_by_lloyd_algorithm(self, pbc=True):
+        L = self.L
+        updated_points = np.zeros(self.points.shape)
+        for i, polygon in enumerate(self.voro.polytopes):
+            centroid = ConvexGeometry(polygon).centroid()
+            x, y = centroid[0], centroid[1]
+            if pbc:
+                if x < -L / 2:
+                    x += L
+                elif x > L / 2:
+                    x -= L
+                if y < -L / 2:
+                    y += L
+                elif y > L / 2:
+                    y -= L
+            updated_points[i] = [x, y, 0.]
+        return np.array(updated_points)
 
 class DynamicalAnalysis(object):
     
