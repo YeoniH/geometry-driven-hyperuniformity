@@ -129,7 +129,7 @@ class PeriodicVoro(object):
         
     def compute_total_quantizer_energy(self):
         quantizer_energy = self.quantizer_energy_of_voronoi_cells()
-        total_quantizer_energy = float((self.numPoints**(2/self.dim)) / (self.dim*(self.L_x*self.L_y)**(1+2/self.dim))) * float(sum(quantizer_energy))
+        total_quantizer_energy = float((self.num_points**(2/self.dim)) / (self.dim*(self.L*self.L)**(1+2/self.dim))) * float(sum(quantizer_energy))
         return total_quantizer_energy
 
 
