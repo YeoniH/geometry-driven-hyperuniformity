@@ -1,6 +1,6 @@
 # geometry-driven-hyperuniformity
 
-Geometry-driven hyperuniformity refers to the resulting configuration obtained through an ordering transition along the Lloyd's algorithm (animation below).
+Geometry-driven hyperuniformity refers to the state of the resulting configuration obtained through an ordering transition along the Lloyd's algorithm (animation below).
 
 ![](https://github.com/YeoniH/geometry-driven-hyperuniformity/blob/main/N100_Poi-1_t0-300.gif)
 
