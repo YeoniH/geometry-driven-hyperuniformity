@@ -118,7 +118,7 @@ class PeriodicVoro(object):
         msd.compute(positions=(self.points, updated_points_by_lloyd))
         msd.plot(ax=self.ax)
 
-    def quantizer_energy_of_voronoi_cells(self):
+    def quantizer_energy(self):
         energy = []
         for idx, polytope in enumerate(self.voro.polytopes):
             vertices = polytope[:, :2]
@@ -128,7 +128,7 @@ class PeriodicVoro(object):
         return energy
         
     def compute_total_quantizer_energy(self):
-        quantizer_energy = self.quantizer_energy_of_voronoi_cells()
+        quantizer_energy = self.quantizer_energy()
         total_quantizer_energy = float((self.numPoints**(2/self.dim)) / (self.dim*(self.L_x*self.L_y)**(1+2/self.dim))) * float(sum(quantizer_energy))
         return total_quantizer_energy
 
