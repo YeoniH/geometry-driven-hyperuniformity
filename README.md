@@ -1,8 +1,11 @@
 # geometry-driven-hyperuniformity
 
 This repository contains Python codes for computational analysis on evolving point configurations, where a randomly disordered point pattern is taken as input to the Lloyd's algorithm to transition into an effectively hyperuniform configuration.
+Geometry-driven hyperuniformity refers to the resulting configuration obtained through such an ordering transition along the Lloyd's algorithm. 
 
-The provided codes form the basis of investiagation on "geometry-driven hyperuniformity" in the [doctoral thesis](https://openresearch-repository.anu.edu.au/items/71d9e451-34a6-42bf-a389-cb56188bbc18) of [Sungyeon Hong](https://cybernetics.anu.edu.au/people/sungyeon-hong/) along with her publications below.
+The Jupyter Notebooks (created by Google Colab) are provided for users to run the Lloyd's iterations and conduct computational analyses using functions defined in Analysis module.
+For now, the simulation is only for 2D, but the 3D counterpart will be included in the near future — Stay tuned!
+The provided code form the basis of the investiagation on "geometry-driven hyperuniformity" in the [doctoral thesis](https://openresearch-repository.anu.edu.au/items/71d9e451-34a6-42bf-a389-cb56188bbc18) of [Sungyeon Hong](https://cybernetics.anu.edu.au/people/sungyeon-hong/) along with her publications below.
 
 To smoothly run the codes, the following packages are required:
 * [numpy](https://numpy.org/)
