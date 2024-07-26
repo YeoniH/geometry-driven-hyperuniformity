@@ -4,6 +4,7 @@ This repository contains Python codes for computational analysis on evolving poi
 Geometry-driven hyperuniformity refers to the resulting configuration obtained through such an ordering transition along the Lloyd's algorithm. 
 
 Below is an animation depicting the ordering transition:
+
 ![](https://github.com/YeoniH/geometry-driven-hyperuniformity/blob/main/N100_Poi-1_t0-300.gif)
 
 The Jupyter Notebooks are provided for users to run the Lloyd's iterations and conduct computational analyses using functions defined in Analysis module.
