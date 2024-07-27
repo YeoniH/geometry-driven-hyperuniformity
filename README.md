@@ -8,7 +8,7 @@ As it repeates the process, the point pattern exhibits effective hyperuniformity
 
 The animation below illustrates the ordering transition of a cellular pattern, where vectors represent cell orientations $\Theta$ and (Voronoi) cells at each iteration step are coloured according to $\Theta$. 
 
-![](https://github.com/YeoniH/geometry-driven-hyperuniformity/blob/main/N100_Poi-1_t0-300.gif)
+![](https://github.com/YeoniH/geometry-driven-hyperuniformity/blob/main/N100_Poi-1_t0-300_loop.gif)
 
 Upon convergence towards hyperuniformity, the Voronoi landscape consists of almost regular hexagonal cells with a small fraction of pentagonal and heptagonal defects.
 
