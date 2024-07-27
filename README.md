@@ -26,6 +26,6 @@ To smoothly run the codes, the following packages are required:
 * [freud-anlysis](https://freud.readthedocs.io/en/stable/#)
 * [collections](https://docs.python.org/3/library/collections.html)
 
-References:
+## References
 * S. Hong, M. A. Klatt, G. Schröder-Turk, N. François, M. Saadatfar. (2021). [Dynamical arrest of topological defects in 2D hyperuniform disk packings](https://www.epj-conferences.org/articles/epjconf/abs/2021/03/epjconf_pg2021_15002/epjconf_pg2021_15002.html). In Proceedings of the Powders and Grains 2021. EPJ Web of Conferences 249, 15002.
 * M. A. Klatt, J. Lovrić, D. Chen et al. (2019) [Universal hidden order in amorphous cellular geometries](https://doi.org/10.1038/s41467-019-08360-5). Nat Commun 10, 811.
