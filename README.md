@@ -6,7 +6,7 @@ Geometry-driven hyperuniformity refers to the state of the resulting configurati
 Given a point pattern as input, the algorithm computes the centroid of the Voronoi cell of each point to replace every point by the associated centroid at each iteration step. 
 As it repeates the process, the point pattern exhibits effective hyperuniformity (Klatt *et al*. 2019) that is characterised by an anomalous suppression of density fluctuations at large length scales.
 
-The animation below illustrates the ordering transition of a cellular pattern, where vectors represent cell orientations $\Theta$ and (Voronoi) cells at each iteration step are coloured according to $\Theta$. 
+The animation below illustrates the ordering transition of a cellular pattern up to Lloyd iteration step 300, where vectors represent cell orientations $\Theta$ and (Voronoi) cells at each iteration step are coloured according to $\Theta$. 
 
 ![](https://github.com/YeoniH/geometry-driven-hyperuniformity/blob/main/N100_Poi-1_t0-300_loop.gif)
 
