@@ -1,8 +1,18 @@
 # geometry-driven-hyperuniformity
 
-Geometry-driven hyperuniformity refers to the state of the resulting configuration obtained through an ordering transition along the Lloyd's algorithm (animation below).
+## Background
+
+Geometry-driven hyperuniformity refers to the state of the resulting configuration obtained through an ordering transition along the Lloyd's algorithm.
+Given a point pattern as input, the algorithm computes the centroid of the Voronoi cell of each point to replace every point by the associated centroid at each iteration step. 
+As it repeates the process, the point pattern exhibits effective hyperuniformity (Klatt *et al*. 2019) that is characterised by an anomalous suppression of density fluctuations at large length scales.
+
+The animation below illustrates the ordering transition of a cellular pattern, where vectors represent cell orientations $\Theta$ and (Voronoi) cells at each iteration step are coloured according to $\Theta$. 
 
 ![](https://github.com/YeoniH/geometry-driven-hyperuniformity/blob/main/N100_Poi-1_t0-300.gif)
+
+Upon convergence towards hyperuniformity, the Voronoi landscape consists of almost regular hexagonal cells with a small fraction of pentagonal and heptagonal defects.
+
+## About this repository
 
 This repository contains Python codes for computational analysis on evolving point configurations, where a randomly disordered point pattern is taken as input to the Lloyd's algorithm to transition into an effectively hyperuniform configuration.
 The provided codes form the basis of the investiagation on "geometry-driven hyperuniformity" in the [doctoral thesis](https://openresearch-repository.anu.edu.au/items/71d9e451-34a6-42bf-a389-cb56188bbc18) of [Sungyeon Hong](https://cybernetics.anu.edu.au/people/sungyeon-hong/) along with her publications below.
