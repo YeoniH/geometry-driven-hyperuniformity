@@ -16,7 +16,6 @@ import itertools
 from scipy.spatial import ConvexHull
 from collections import defaultdict
 
-
 class ConvexGeometry(object):
     
     def __init__(self, vertices):
@@ -91,6 +90,11 @@ class PeriodicVoro(object):
         voro.compute((self.box, points))
         self.voro = voro
 
+        fig = plt.figure(figsize=(5, 3))
+        self.ax = fig.add_subplot(111)
+        self.ax.tick_params(axis='both', labelsize=13)
+        self.ax.set_aspect('equal', 'box')
+
     def update_by_lloyd_algorithm(self, pbc=True):
         """ For the given point pattern (__init__), compute the next pattern 
             updated by the Lloyd's algorithm """
@@ -112,7 +116,7 @@ class PeriodicVoro(object):
         return np.array(updated_points)
     
     def msd(self):
-        """ This function computes the meas-square displacement of a system """
+        """ This function computes the mean-square displacement of a system """
         msd = freud.msd.MSD(box=self.box, mode="direct")
         updated_points_by_lloyd = self.update_by_lloyd_algorithm()
         msd.compute(positions=(self.points, updated_points_by_lloyd))
@@ -211,7 +215,7 @@ class PeriodicVoro(object):
 
         quadruples = []
         sets_of_quadruples = []
-        for i in range(self.numPoints):
+        for i in range(self.num_points):
             neighbors = nb_dict[i]
             pairs = list(itertools.combinations(neighbors, 2))
             for pair in pairs:
@@ -258,13 +262,6 @@ class PeriodicVoro(object):
             else:
                 print('T1-active cells for non-quadruples:', quad)
         flatten_t1Q = [elt for quad in Q_t1active for elt in quad]
-        if empty_save:   # Save empty files
-            np.savetxt('{0}/t1_transition/T1-quad/{1}/T1-quad_{2}_t{3}.txt'.format(self.savePath, self.name, self.name[3:], self.step),
-                       np.reshape(Q_t1active, (len(Q_t1active), 4)), fmt='%i %i %i %i')
-        else:           # Don't save empty files
-            if Q_t1active:
-                np.savetxt('{0}/t1_transition/T1-quad/{1}/T1-quad_{2}_t{3}.txt'.format(self.savePath, self.name, self.name[3:],self.step),
-                           np.reshape(Q_t1active, (len(Q_t1active), 4)), fmt='%i %i %i %i')
         print('Time taken:', time.strftime('%H:%M:%S', time.gmtime(time.time() - start_time)))
         return flatten_t1Q
 
@@ -276,26 +273,11 @@ class PeriodicVoro(object):
         angle = []
         for i, k in enumerate(k_dict.values()):
             op = freud.order.Hexatic(k=k)
-            op.compute(system=({'Lx': self.L_x, 'Ly': self.L_y, 'dimensions': 2}, self.points),
+            op.compute(system=({'Lx': self.L, 'Ly': self.L, 'dimensions': 2}, self.points),
                        neighbors={'num_neighbors': k})
             magnitude.append(np.absolute(op.particle_order[i]))
             angle.append(np.angle(op.particle_order[i]))
         return magnitude, angle
-
-    def mean_polygonal_symmetry_of_k_skeleton(self, k=2):
-        f_skeletons = open(
-            '{0}/defects/{1}/skeletons/skeletons_{2}.txt'.format(self.savePath, self.name, self.fullName), 'r')
-        k_skeletons = []
-        for line in f_skeletons.readlines():
-            line = line.strip().split(' ')
-            if len(line) == k:
-                k_skeletons.append([int(line[j]) for j in range(len(line))])
-        symm_order_all = self.compute_polygonal_symmetry(order="magnitude")
-        symm_order_k_skeletons = []
-        for skeleton in k_skeletons:
-            for elt in skeleton:
-                symm_order_k_skeletons.append(symm_order_all[elt])
-        return np.mean(symm_order_k_skeletons)
 
     
     ###### ISOPERIMETRIC RATIO
@@ -317,7 +299,7 @@ class PeriodicVoro(object):
     def topological_charge_of_every_polygon(self):
         charges = []
         for idx, polytope in enumerate(self.voro.polytopes):
-            charge.append(int(6 - len(polytope)))
+            charges.append(int(6 - len(polytope)))
         return charges
 
 
@@ -328,12 +310,10 @@ class PeriodicVoro(object):
         for idx, polytope in enumerate(self.voro.polytopes):
             if len(polytope) in [5, 7]:
                 defective_cells[idx] = len(polytope)
-        # print(defective_cells.keys())
 
         nlist_defects = defaultdict(list)
         count = 0
         for idx, polytope in enumerate(self.voro.polytopes):
-            # count += len(polytope)
             if idx not in defective_cells:
                 count += len(polytope)
             else:
@@ -342,22 +322,12 @@ class PeriodicVoro(object):
                     ii, jj = self.voro.nlist[idx_neighbor + count]
                     if ii not in defective_cells.keys():
                         print(ii)
-                        # nlist_defects[ii].append(None)
                         count += 1
                     else:
                         if jj in defective_cells.keys():
                             nlist_defects[ii].append(jj)
-                # print(idx, len(polytope))
-                # print(self.voro.nlist[count:count+len(polytope)])
                 count += len(polytope)
         isolated_defects = sorted(defective_cells.keys() - nlist_defects.keys())
-        
-        system("mkdir {0}/defects/{1} {0}/defects/{1}/nlist {0}/defects/{1}/skeletons {0}/defects/{1}/charge".format(self.savePath, self.name))
-        f_nlist = open('{0}/defects/{1}/nlist/nlist_{2}.txt'.format(self.savePath, self.name, self.fullName), 'w')
-        for defect in defective_cells.keys():
-            if defect not in isolated_defects:
-                for neighbor in nlist_defects[defect]:
-                    f_nlist.write(str(defect)+' '+str(neighbor)+'\n')
 
         endpoints = []
         for defect in defective_cells.keys():
@@ -413,8 +383,7 @@ class PeriodicVoro(object):
             chain_size.append(len(labeled_chain))
         print('Max chain size: {}'.format(np.max(chain_size)))
 
-        f_skeletons = open('{0}/defects/{1}/skeletons/skeletons_{2}.txt'.format(self.savePath, self.name, self.fullName), 'w')
-        f_charge = open('{0}/defects/{1}/charge/charge_{2}.txt'.format(self.savePath, self.name, self.fullName), 'w')
+        f_skeletons = open('skeletons.txt', 'w')
         k_list = []
         for independent_chain in clusters:
             topological_charge = 0
@@ -428,20 +397,10 @@ class PeriodicVoro(object):
                     topological_charge -= 1
                 else:
                     topological_charge += 0
-            f_charge.write(str(topological_charge) + ' \n')
             k_list.append(skeleton)
             if independent_chain:
                 f_skeletons.write('\n')
         f_skeletons.close()
-        f_charge.close()
-
-        # f_skeletons = open('{0}/defects/{1}/skeletons/skeletons_{2}.txt'.format(self.savePath, self.name, self.fullName), 'r')
-        # k_list = []
-        # for i, line in enumerate(f_skeletons.readlines()):
-        #     line = line.strip().split(' ')
-        #     k_list.append(len(line))
-        # k_list = list(set(k_list))
-        # f_skeletons.close()
 
         size_sum = 0
         all_in_chains = []
@@ -449,10 +408,9 @@ class PeriodicVoro(object):
             size_sum += len(independent_chain)
             for item in independent_chain:
                 all_in_chains.append(item)
-        print('Total number of (labelled) defects of {}: {} ({})'.format(self.fullName, size_sum,
-                                                                         len(defective_cells)))
+        print(f'Total number of (labelled) defects: {size_sum} ({len(defective_cells)})')
         if size_sum != len(defective_cells):
-            print('There must be duplicated cells in {}!'.format(self.fullName))
+            print('There must be duplicated cells!')
 
         return k_list
 
@@ -476,10 +434,8 @@ class PeriodicVoro(object):
                             # print(len(self.voro.polytopes[jj]))
                 count += len(polytope)
 
-        system('mkdir {0}/defects/{1}/bodies'.format(self.savePath, self.name))
-        f_skeletons = open('{0}/defects/{1}/skeletons/skeletons_{2}.txt'.format(self.savePath, self.name, self.fullName), 'r')
-        f_skins = open('{0}/defects/{1}/bodies/skins_{2}.txt'.format(self.savePath, self.name, self.fullName), 'w')
-        skins = []
+        f_skeletons = open('skeletons.txt', 'r')
+        f_skins = open('skins.txt', 'w')
         for i, line in enumerate(f_skeletons.readlines()):
             line = line.strip().split(' ')
             line = [int(line[j]) for j in range(len(line))]
@@ -493,21 +449,19 @@ class PeriodicVoro(object):
                         added_already.append(first_nb)
             f_skins.write('\n')
             skins.append(skins)
-        # print(skins)
         f_skins.close()
         print('Done with extracting defect skins!')
 
     def extract_independent_defect_bodies(self):
         print('Extracting defect bodies')
-        f_skeleton = open('{0}/defects/{1}/skeletons/skeletons_{2}.txt'.format(self.savePath, self.name, self.fullName), 'r')
-        f_skin = open('{0}/defects/{1}/bodies/skins_{2}.txt'.format(self.savePath, self.name, self.fullName), 'r')
+        f_skeleton = open('skeletons.txt', 'r')
+        f_skin = open('skins.txt', 'r')
 
         count = 0
         skeleton = []
         skeletons = []
         for line in f_skeleton.readlines():
             line = line.strip().split(' ')
-            # print(line)
             count += len(line)
             skeleton.append([int(line[j]) for j in range(len(line))])
             for elt in line:
@@ -538,7 +492,6 @@ class PeriodicVoro(object):
 
         already_grouped = []
         agglomerates = []
-        # for b1 in skeletons:
         for j in range(len(skeleton)):
             cj = []
             for b1 in skeleton[j]:
@@ -560,12 +513,47 @@ class PeriodicVoro(object):
                 agglomerates.append(cj)
 
         agglomerates = reversed(sorted(agglomerates, key=len))
-        f_bodies = open('{0}/defects/{1}/bodies/bodies_{2}.txt'.format(self.savePath, self.name, self.fullName), 'w')
+        f_bodies = open('bodies.txt', 'w')
         for connected_component in agglomerates:
             for elt in connected_component:
                 f_bodies.write('{} '.format(elt))
             f_bodies.write('\n')
         f_bodies.close()
+
+    def mean_polygonal_symmetry_of_k_skeleton(self, k=2):
+        f_skeletons = open('skeletons.txt', 'r')
+        k_skeletons = []
+        for line in f_skeletons.readlines():
+            line = line.strip().split(' ')
+            if len(line) == k:
+                k_skeletons.append([int(line[j]) for j in range(len(line))])
+        symm_order_all = self.compute_polygonal_symmetry()
+        symm_order_k_skeletons = []
+        for skeleton in k_skeletons:
+            for elt in skeleton:
+                symm_order_k_skeletons.append(symm_order_all[elt])
+        return np.mean(symm_order_k_skeletons)
+
+
+    ##### STRUCTURAL ENTROPY
+
+    def identify_isomorphism_classes(self, graphs):
+        ''' Filter graphs to have distinct isomorphism classes '''
+        system(f'mkdir entropy entropy/t{self.step}')
+        system(f'cd entropy/t{self.step}; nauty-shortg -qkvd {graphs} isom_{graphs}.s6')
+        system(f'cd entropy/t{self.step}; nauty-shortg -q {graphs} dist_isom_{graphs}.s6')
+        system(f'cd entropy/t{self.step}; nauty-labelg -q {graphs} isom_CL_{graphs}.s6')
+
+    def compute_structural_entropy(self, graphs):
+        self.identify_isomorphism_classes()
+        isom_class = np.loadtxt(f"entropy/t{self.step}/isom_CL_{graphs}.s6")
+        num_of_graphs_in_each_class = {c: isom_class.count(c) for c in set(isom_class)}
+        total_num_of_graphs = np.sum(list(num_of_graphs_in_each_class.values()))
+        S_str = {}
+        for c in num_of_graphs_in_each_class:
+            proba_c = num_of_graphs_in_each_class[c] / total_num_of_graphs
+            S_str[c] = - proba_c * np.log(proba_c)
+        return S_str
 
 
 class StructureAnalysis(object):
@@ -580,10 +568,9 @@ class StructureAnalysis(object):
         self.num_kbins = num_kbins
         self.fullName = name
 
-    def compute_structure_factor_for_2d_data(self, file_name, boxsz=None, save=True):
+    def compute_structure_factor_for_2d_data(self, boxsz=None):
         """ This function is defined by Michael A. Klatt (https://mklatt.org/) """
-        
-        system('mkdir {}/SF'.format(self.resultPath))
+
         num_points = self.coord.shape[0]
         if boxsz == None:
             boxsz = np.sqrt(num_points)
@@ -632,14 +619,14 @@ class StructureAnalysis(object):
 
         # print('Determining structure factor ...')
         S = np.zeros((count), dtype=complex)  # structure factor
-        if self.tqdm_available:
-            for sj in tqdm(range(num_points)):
-                S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
-        else:
-            for sj in range(num_points):
-                S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
-                if sj % 1000 == 0:
-                    print('Computing SF : Point {}'.format(sj))
+        # if self.tqdm_available:
+        #     for sj in tqdm(range(num_points)):
+        #         S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
+        # else:
+        for sj in range(num_points):
+            S += np.exp(-1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1])))
+            if sj % 1000 == 0:
+                print('Computing SF : Point {}'.format(sj))
 
         # The final (unbinned) structure factor for each absolute value of k
         unbinned = np.zeros((count, 4))
@@ -688,14 +675,10 @@ class StructureAnalysis(object):
         output[idx, 1:3] = np.nan
 
         # Output structure factor
-        if save:
-            np.savetxt("{0}/SF/{1}/{2}.dat".format(self.resultPath, self.P_name, file_name), output, fmt="%.10f %.10f %.10f %i")
-            # np.savetxt(coords_file[:-4] + "-Sk.dat", output, fmt="%.10f %.10f %.10f %i")
-        else:
-            return np.array(output)
+        return np.array(output)
 
 
-    def structure_factor_for_3d_data(self, num_points, min_k, max_k, num_kbins, box_size=None):
+    def compute_structure_factor_for_3d_data(self, num_points, min_k, max_k, num_kbins, box_size=None):
         """ This function is defined by Michael A. Klatt (https://mklatt.org/) """
         
         if box_size == None:
@@ -769,14 +752,14 @@ class StructureAnalysis(object):
 
         # print('Determining structure factor ...')
         S = np.zeros((count), dtype=complex)  # structure factor
-        if self.tqdm_available:
-            for sj in tqdm(range(num_points)):
-                S += np.exp(
-                    -1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1]) + kz * float(
-                        self.coord[sj, 2])))
-        else:
-            for sj in range(num_points):
-                S += np.exp(-1j * (kx * self.coord[sj, 0] + ky * self.coord[sj, 1] + kz * self.coord[sj, 2]))
+        # if self.tqdm_available:
+        #     for sj in tqdm(range(num_points)):
+        #         S += np.exp(
+        #             -1j * (kx * float(self.coord[sj, 0]) + ky * float(self.coord[sj, 1]) + kz * float(
+        #                 self.coord[sj, 2])))
+        # else:
+        for sj in range(num_points):
+            S += np.exp(-1j * (kx * self.coord[sj, 0] + ky * self.coord[sj, 1] + kz * self.coord[sj, 2]))
 
         # The final (unbinned) structure factor for each absolute value of k
         unbinned = np.zeros((count, 5))
@@ -825,9 +808,6 @@ class StructureAnalysis(object):
         output[idx, 1:3] = np.nan
 
         # Output structure factor
-        np.savetxt("%s/SF/%s/SF_q%.1f_%ibins_" % (self.resultPath, self.P_name, max_k, num_kbins) + name + ".dat", output,
-                   fmt="%.10f %.10f %.10f %i")
-        # np.savetxt(coords_file[:-4] + "-Sk.dat", output, fmt="%.10f %.10f %.10f %i")
-        # return output
+        return output
 
 
