@@ -34,4 +34,4 @@ Also, some external software will be in need for the computation of structural e
 
 [2] M. A. Klatt, J. Lovrić, D. Chen et al. (2019) [Universal hidden order in amorphous cellular geometries](https://doi.org/10.1038/s41467-019-08360-5). Nat Commun 10, 811.
 
-[3] S. Hong, C. Nerse, S. Oberst, M. Saadatfar. (*in press*). Topological mechanical states in geometry-driven hyperuniform materials. PNAS Nexus
+[3] S. Hong, C. Nerse, S. Oberst, M. Saadatfar. (2024). [Topological mechanical states in geometry-driven hyperuniform materials](https://doi.org/10.1093/pnasnexus/pgae510). PNAS Nexus, pgae510
